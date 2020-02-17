@@ -31,9 +31,9 @@ def test_with_pytest_html_template():
 
 
 if __name__ == "__main__":
-    # test_with_default_template()
+    test_with_default_template()
     # test_with_htmltestreportcn_template()
-    test_with_pytest_html_template()
+    # test_with_pytest_html_template()
 
     # from HTMLTestReportCN import HTMLTestRunner
     

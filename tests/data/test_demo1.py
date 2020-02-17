@@ -8,9 +8,11 @@ class TestDemo1(unittest.TestCase):
 
     def test_fail(self):
         logging.info('fail')
+        print('fail')
         assert 0
 
     def test_error(self):
+        print('error')
         logging.error('error')
         open('abc.txt')
 
