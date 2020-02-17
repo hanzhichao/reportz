@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试报告</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="pt-4">测试报告</h1>
+    <h6>测试报告描述信息</h6>
+    <h6>执行: 4 通过: 1 失败: 1 出错: 1 跳过: 1</h6>
+    <h6 class="pb-2">执行时间: 0.001528s</h6>
+    <table class="table table-striped">
+        <thead><tr><th>用例名</th><th>状态</th><th>执行信息</th></tr></thead>
+        <tbody>
+            
+            <tr><td>tests.test_reportz.TestReportz.test_error</td><td>error</td><td>Traceback (most recent call last):<br/>  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/test_reportz.py", line 18, in test_error<br/>    open('abc.txt')<br/>FileNotFoundError: [Errno 2] No such file or directory: 'abc.txt'<br/></td></tr>
+            
+            <tr><td>tests.test_reportz.TestReportz.test_fail</td><td>fail</td><td>Traceback (most recent call last):<br/>  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/test_reportz.py", line 14, in test_fail<br/>    assert 0<br/>AssertionError<br/></td></tr>
+            
+            <tr><td>tests.test_reportz.TestReportz.test_skip</td><td>skip</td><td>原因</td></tr>
+            
+            <tr><td>tests.test_reportz.TestReportz.test_success</td><td>pass</td><td></td></tr>
+            
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

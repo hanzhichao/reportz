@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="pt-4">测试报告</h1>
+    <h6>测试报告描述信息</h6>
+    <h6>执行: {{run_num}} 通过: {{pass_num}} 失败: {{fail_num}} 出错: {{error_num}} 跳过: {{skipped_num}}</h6>
+    <h6 class="pb-2">执行时间: {{duration}}s</h6>
+    <table class="table table-striped">
+        <thead><tr><th>用例名</th><th>状态</th><th>执行信息</th></tr></thead>
+        <tbody>
+            {% for case in cases %}
+            <tr><td>{{case.name}}</td><td>{{case.status}}</td><td>{{case.exec_info}}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
