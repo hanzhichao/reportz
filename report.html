@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,20 +8,94 @@
 <body>
 <div class="container">
     <h1 class="pt-4">测试报告</h1>
-    <h6>测试报告描述信息</h6>
-    <h6>执行: 4 通过: 1 失败: 1 出错: 1 跳过: 1</h6>
-    <h6 class="pb-2">执行时间: 0.001528s</h6>
-    <table class="table table-striped">
-        <thead><tr><th>用例名</th><th>状态</th><th>执行信息</th></tr></thead>
+    <h6>测试报告描述</h6>
+    <h6>执行人: Hzc</h6>
+    <h6>概要: 执行总数: 12 通过: 3 失败: 3 出错: 3 跳过: 3</h6>
+    <h6 class="pb-2">开始时间: 2020-02-17 18:55:41 结束时间: 2020-02-17 18:55:41 耗时: 0.003259s</h6>
+    <table class="table table-sm table-striped table-bordered table-hover">
+        <thead><tr><th>序号</th><th>用例</th><th>总数</th><th>通过</th><th>失败</th><th>出错</th></tr></thead>
         <tbody>
             
-            <tr><td>tests.test_reportz.TestReportz.test_error</td><td>error</td><td>Traceback (most recent call last):<br/>  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/test_reportz.py", line 18, in test_error<br/>    open('abc.txt')<br/>FileNotFoundError: [Errno 2] No such file or directory: 'abc.txt'<br/></td></tr>
+                <tr><td colspan="2">demo2.demo22.test_demo22.TestDemo22</td><td>4</td><td>1</td><td>1</td><td>1</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-warning
+                    "><td>1</td><td>test_error</td><td colspan="4">ERROR<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/demo2/demo22/test_demo22.py", line 15, in test_error
+    open('abc.txt')
+FileNotFoundError: [Errno 2] No such file or directory: 'abc.txt'
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-danger
+                    "><td>2</td><td>test_fail</td><td colspan="4">FAIL<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/demo2/demo22/test_demo22.py", line 11, in test_fail
+    assert 0
+AssertionError
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-secondary
+                    "><td>3</td><td>test_skip</td><td colspan="4">SKIPPED<br/>原因</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-success
+                    "><td>4</td><td>test_success</td><td colspan="4">PASS<br/></td></tr>
+                
             
-            <tr><td>tests.test_reportz.TestReportz.test_fail</td><td>fail</td><td>Traceback (most recent call last):<br/>  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/test_reportz.py", line 14, in test_fail<br/>    assert 0<br/>AssertionError<br/></td></tr>
+                <tr><td colspan="2">demo2.test_demo2.TestDemo2</td><td>4</td><td>1</td><td>1</td><td>1</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-warning
+                    "><td>5</td><td>test_error</td><td colspan="4">ERROR<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/demo2/test_demo2.py", line 15, in test_error
+    open('abc.txt')
+FileNotFoundError: [Errno 2] No such file or directory: 'abc.txt'
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-danger
+                    "><td>6</td><td>test_fail</td><td colspan="4">FAIL<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/demo2/test_demo2.py", line 11, in test_fail
+    assert 0
+AssertionError
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-secondary
+                    "><td>7</td><td>test_skip</td><td colspan="4">SKIPPED<br/>原因</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-success
+                    "><td>8</td><td>test_success</td><td colspan="4">PASS<br/></td></tr>
+                
             
-            <tr><td>tests.test_reportz.TestReportz.test_skip</td><td>skip</td><td>原因</td></tr>
-            
-            <tr><td>tests.test_reportz.TestReportz.test_success</td><td>pass</td><td></td></tr>
+                <tr><td colspan="2">test_demo1.TestDemo1</td><td>4</td><td>1</td><td>1</td><td>1</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-warning
+                    "><td>9</td><td>test_error</td><td colspan="4">ERROR<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/test_demo1.py", line 15, in test_error
+    open('abc.txt')
+FileNotFoundError: [Errno 2] No such file or directory: 'abc.txt'
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-danger
+                    "><td>10</td><td>test_fail</td><td colspan="4">FAIL<br/>Traceback (most recent call last):
+  File "/Users/apple/Documents/Projects/Self/Pythonz/reportz/tests/data/test_demo1.py", line 11, in test_fail
+    assert 0
+AssertionError
+</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-secondary
+                    "><td>11</td><td>test_skip</td><td colspan="4">SKIPPED<br/>原因</td></tr>
+                
+                    <tr class="ml-md-3
+                    table-success
+                    "><td>12</td><td>test_success</td><td colspan="4">PASS<br/></td></tr>
+                
             
         </tbody>
     </table>

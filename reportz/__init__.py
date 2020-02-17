@@ -1,108 +1,151 @@
 import time
+import platform
+from datetime import datetime
 import os
 import unittest
 from jinja2 import Template
+from collections import defaultdict
+from itertools import groupby
 
-basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-# with open('.bootstrap_simple.html')
-TPL = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{title}}</title>
-    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
-</head>
-<body>
-<div class="container">
-    <h1 class="pt-4">测试报告</h1>
-    <h6>测试报告描述信息</h6>
-    <h6>执行: {{run_num}} 通过: {{pass_num}} 失败: {{fail_num}} 出错: {{error_num}} 跳过: {{skipped_num}}</h6>
-    <h6 class="pb-2">执行时间: {{duration}}s</h6>
-    <table class="table table-striped">
-        <thead><tr><th>用例名</th><th>状态</th><th>执行信息</th></tr></thead>
-        <tbody>
-            {% for case in cases %}
-            <tr><td>{{case.name}}</td><td>{{case.status}}</td><td>{{case.exec_info}}</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-</body>
-</html>
-'''
+# STATUS = {
+#     0: 'pass',
+#     1: 'fail',
+#     2: 'error',
+#     3: 'skipped'
+# }
 
 
 class Result(unittest.TestResult):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, verbosity=1):
+        super().__init__(verbosity=verbosity)
+        self.verbosity = verbosity
         self.success = []
-        self.cases = []
+        self.results = []
+        self.test_class = defaultdict(list)
+        self.sn = 1
+
+    def register(self, test, status, exec_info='', log='', imgs=[]):
+        # item = (test, status, exec_info)
+        test_module_name = test.__module__
+        test_class_name = test.__class__.__name__
+        test_class_doc = test.__class__.__doc__
+        test_method_name = test._testMethodName
+        test_method_doc = test._testMethodDoc
+
+        if test_module_name == '__main__':
+            test_module_name = ''
+        else:
+            test_class_name = '%s.%s' % (test_module_name, test_class_name)
+
+        item = dict(test=test, 
+            sn = self.sn,
+            name=test_method_name,
+            full_name=test.id(),
+            doc=test_method_doc,
+            status=status,
+            test_class=test_class_name,
+            test_class_doc=test_class_doc,
+            test_module=test_module_name,
+            exec_info=exec_info,
+            log=log,
+            imgs=imgs,
+            )
+        self.results.append(item)
+        self.sn += 1
+        
+    def sortByClass(self):
+        sorted_results = sorted(self.results, key=lambda x: x['test_class'])
+        data = defaultdict(dict)
+        for name, group in groupby(sorted_results, key=lambda x: x['test_class']):
+            test_cases = list(group)
+            data[name] = dict(
+                name=name,
+                test_cases=test_cases,
+                total=len(test_cases),
+                pass_num=len(list(filter(lambda x: x['status']=="PASS", test_cases))),
+                error_num=len(list(filter(lambda x: x['status']=="ERROR", test_cases))),
+                fail_num=len(list(filter(lambda x: x['status']=="FAIL", test_cases))),
+                skipped_num=len(list(filter(lambda x: x['status']=="SKIPPED", test_cases))),
+                xfail_num=len(list(filter(lambda x: x['status']=="XFAIL", test_cases))),
+                xpass_num=len(list(filter(lambda x: x['status']=="XPASS", test_cases)))
+            )
+            test_classes = list(data.values())
+        return test_classes
+
+
+    def addError(self, test, err):
+        super().addError(test, err)
+        self.register(test, 'ERROR', self._exc_info_to_string(err, test))
+
+    def addFailure(self, test, err):
+        super().addFailure(test, err)
+        self.register(test, 'FAIL', self._exc_info_to_string(err, test))
 
     def addSuccess(self, test):
         self.success.append(test)
-        self.cases.append({"name": test.id(), "status": "pass", "exec_info": ""})
+        self.register(test, 'PASS')
 
-    def addError(self, test, exec_info):
-        self.errors.append((test, exec_info))
-        self.cases.append({"name": test.id(), "status": "error",
-                           "exec_info": self._exc_info_to_string(exec_info, test)
-                          .replace("\n", "<br/>")})
+    def addSkip(self, test, reason):
+        super().addSkip(test, reason)
+        self.register(test, 'SKIPPED', reason)
 
-    def addFailure(self, test, exec_info):
-        self.failures.append((test, exec_info))
-        self.cases.append({"name": test.id(), "status": "fail",
-                           "exec_info": self._exc_info_to_string(exec_info, test)
-                          .replace("\n", "<br/>")})
 
-    def addSkip(self, test, skip_reason):
-        self.skipped.append((test, skip_reason))
-        self.cases.append({"name": test.id(), "status": "skip",
-                           "exec_info": skip_reason})
-
-    def addExpectedFailure(self, test, exec_info):
-        self.success.append(test)
-        self.cases.append({"name": test.id(), "status": "pass",
-                           "exec_info": self._exc_info_to_string(exec_info, test)
-                          .replace("\n", "<br/>")})
+    def addExpectedFailure(self, test, err):
+        super().addExpectedFailure(test, err)
+        self.register(test, 'XFAIL', self._exc_info_to_string(err, test))
 
     def addUnexpectedSuccess(self, test):
-        self.failures.append((test, "UnexpectedSuccess"))
-        self.cases.append({"name": test.id(), "status": "fail", "exec_info": "UnexpectedSuccess"})
+        super().addUnexpectedSuccess(test)
+        self.register(test, 'XPASS', 'UnexpectedSuccess')
+        
 
 
 class HTMLRunner(object):
-    def __init__(self, output, title="Test Report", description=""):
-        self.file = output
+    def __init__(self, output, title="Test Report", description="", template='simple', **kwargs):
+        self.file = datetime.now().strftime(output)
         self.title = title
         self.description = description
+        self.template = template
+        self.kwargs = kwargs
 
     def run(self, suite):
+        start_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         result = Result()   # 用于保存测试结果
         start_time = time.time()
         suite(result)  # 执行测试
+        end_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         duration = round(time.time() - start_time, 6)
-        print(len(result.success), len(result.failures))
         # 渲染数据到模板
-        content = Template(TPL).render({"title": self.title,
-                                        "description": self.description,
-                                        "cases": result.cases,
-                                        "run_num": result.testsRun,
-                                        "pass_num": len(result.success),
-                                        "fail_num": len(result.failures),
-                                        "skipped_num": len(result.skipped),
-                                        "error_num": len(result.errors),
-                                        "duration": duration})
+        basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_path = os.path.join(basedir, 'templates', '%s.html' % self.template)
+
+        with open(template_path) as f:
+            template_content = f.read()
+        
+        test_classess = result.sortByClass()
+        
+        context = { "title": self.title,
+                    "description": self.description,
+                    "test_cases": result.results,
+                    "test_classes": test_classess,
+                    "total": len(result.results),
+                    "run_num": result.testsRun,
+                    "pass_num": len(result.success),
+                    "fail_num": len(result.failures),
+                    "skipped_num": len(result.skipped),
+                    "error_num": len(result.errors),
+                    "xfail_num": len(result.expectedFailures),
+                    "xpass_num": len(result.unexpectedSuccesses),
+                    "rerun_num": 0,
+                    "start_at": start_at,
+                    "end_at": end_at,
+                    "duration": duration,
+                    "platform": platform.platform(),
+                    "system": platform.system(),
+                    "python_version": platform.python_version(),
+                }
+        context.update(self.kwargs)
+        content = Template(template_content).render(context)
         with open(self.file, "w") as f:
             f.write(content)  # 写入文件
         return result
-
-
-if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.discover("./")
-    HTMLRunner(output="report.html",
-               title="测试报告",
-               description="测试报告描述").run(suite)
