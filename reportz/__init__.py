@@ -14,10 +14,96 @@ import time
 import signal
 import inspect
 import importlib
-import sys
-sys.path.append('/Users/apple/Documents/Projects/Self/Pythonz/runnerz')
-from runnerz.runner import flatten_suite
+from concurrent.futures import ThreadPoolExecutor
 
+class TimeoutError(Exception):
+    def __init__(self, msg):
+        super(TimeoutError, self).__init__()
+        self.msg = msg
+
+def set_timeout(interval, callback):
+    def decorator(func):
+        def handler(signum, frame):
+            raise TimeoutError("run func timeout")
+        def wrapper(*args, **kwargs):
+            try:
+                signal.signal(signal.SIGALRM, handler)
+                signal.alarm(interval)       # interval秒后向进程发送SIGALRM信号
+                result = func(*args, **kwargs)
+                signal.alarm(0)              # 函数在规定时间执行完后关闭alarm闹钟
+                return result
+            except TimeoutError as e:
+                callback(func, e)
+        return wrapper
+    return decorator
+
+def run_suite_after(suite, result):
+    suite._tearDownPreviousClass(None, result)
+    suite._handleModuleTearDown(result)
+
+def run_suite_before_case(suite, case, result):
+    suite._tearDownPreviousClass(case, result)
+    suite._handleModuleFixture(case, result)
+    suite._handleClassSetUp(case, result)
+    result._previousTestClass = case.__class__
+    if (getattr(case.__class__, '_classSetupFailed', False) or getattr(result, '_moduleSetUpFailed', False)):
+        return False
+    return True
+
+def flatten_suite(suite):
+    new_suite = unittest.TestSuite()
+    def _collect(suite):
+        for test in suite:
+            if _isnotsuite(test):
+                new_suite.addTest(test)
+            elif test.countTestCases() > 0:
+                _collect(test)
+    _collect(suite)
+    return new_suite
+
+
+def group_suites_by_class(suite):
+    suite = flatten_suite(suite)
+    suite_dict = defaultdict(unittest.TestSuite)
+    for test in suite:
+        if _isnotsuite:
+            suite_dict[test.__class__].addTest(test)
+    suite_list = list(suite_dict.values())
+    return suite_list
+
+class Loader(unittest.TestLoader):
+
+    # def discover(self, testspath='.', pattern="*.py"):
+    #     return unittest.defaultTestLoader.discover(testspath, pattern)
+
+    
+    def load_tests_by_config(self, testlist_file):  # test_list_file配置在config/config.py中
+        with open(testlist_file) as f:
+            testlist = f.readlines()
+
+        testlist = [i.strip() for i in testlist if not i.startswith("#")]   # 去掉每行结尾的"/n"和 #号开头的行
+
+        suite = unittest.TestSuite() 
+        all_cases = collect()  # 所有用例
+        for case in all_cases:  # 从所有用例中匹配用例方法名
+            if case._testMethodName in testlist:
+                suite.addTest(case)
+        return suite
+
+    def load_tests_by_tag(self, expr):
+        suite = unittest.TestSuite()
+        for case in collect():
+            if case._testMethodDoc and tag in case._testMethodDoc:  # 如果用例方法存在docstring,并且docstring中包含本标签
+                suite.addTest(case)
+        return suite
+
+    
+    def load_tests_by_level(self, expr):
+        pass
+
+    def load_last_fails(self):
+        pass
+    
 class OutputRedirector(object):
     """ Wrapper to redirect stdout or stderr """
     def __init__(self, fp):
@@ -79,6 +165,8 @@ class Result(unittest.TestResult):
 
 
     def update_test(self, test, status, exec_info='', setup_status=None, teardown_status=None, error_code=None):
+        output = self.complete_output()
+        sys.stdout.write(output)
         last_output = self.result[test.id()].get(output, '')
         last_exec_info = self.result[test.id()].get(output, '')
         self.result[test.id()].update(
@@ -123,7 +211,6 @@ class Result(unittest.TestResult):
                 status=status,
                 setup_status=setup_status,
                 teardown_status=teardown_status,
-                extra_status=extra_status,
                 test_class=test_class_name,
                 test_class_doc=test_class_doc,
                 test_module=test_module_name,
@@ -144,9 +231,9 @@ class Result(unittest.TestResult):
             error_code=error_code)
             
     def sortByClass(self):
-        sorted_results = sorted(self.results, key=lambda x: x['test_class'])
+        sorted_result = sorted(list(self.result.values()), key=lambda x: x['test_class'])
         data = defaultdict(dict)
-        for name, group in groupby(sorted_results, key=lambda x: x['test_class']):
+        for name, group in groupby(sorted_result, key=lambda x: x['test_class']):
             test_cases = list(group)
             data[name] = dict(
                 name=name,
@@ -230,7 +317,7 @@ class Result(unittest.TestResult):
             function_name, path = err_desc.split()
             if function_name in ['setUpModule', 'tearDownModule']:
                 self.handel_module_setup_teardown_error(test, err)
-            elif function_name in ['setUpModule', 'tearDownModule']:
+            elif function_name in ['setUpClass', 'tearDownClass']:
                 self.handle_class_setup_teardown_error(test, err)
             else:
                 print('不支持处理该错误 %s' %function_name)
@@ -254,3 +341,132 @@ class Result(unittest.TestResult):
     def addUnexpectedSuccess(self, test):
         super().addUnexpectedSuccess(test)
         self.register(test, 'XPASS', 'UnexpectedSuccess')
+
+
+class Runner(object):
+    def collect_only(self, suite):
+        t0 = time.time()
+        i = 0
+        suite = flatten_suite(suite)
+        print("Collect {} tests is {:.3f}s".format(suite.countTestCases(),time.time()-t0))
+        print("-"*50)
+        for case in suite:
+            if _isnotsuite(case):
+                i += 1
+                print("{}.{}".format(i, str(case)))
+        print("-"*50)
+        
+    def run_suite(self, suite, result, run_func=None, interval=None):
+        topLevel = False
+        if getattr(result, '_testRunEntered', False) is False:
+            result._testRunEntered = topLevel = True
+
+        for index, test in enumerate(suite):
+            if _isnotsuite(test):
+                setup_ok = run_suite_before_case(suite, test, result)
+                if not setup_ok:
+                    continue
+            
+            run_func(test, result) if run_func else test(result)  # 可能是suite 可能有异常
+            time.sleep(interval) if interval else None
+
+            if suite._cleanup:
+                suite._removeTestAtIndex(index)
+
+        if topLevel:
+            run_suite_after(suite, result)
+            result._testRunEntered = False
+        
+        return result
+
+    def run_suite_by_class(self, suite, result, run_func=None, interval=None):
+        suite_list = group_tests_by_class()
+        for suite in suite_list:
+            self.run_suite(suite, result, run_func=run_func, interval=interval)
+
+
+    def run_suite_in_thread_poll(self, suite, result, thread_num=3, interval=None):
+        poll = ThreadPoolExecutor(max_workers=thread_num)
+        self.run_suite(suite, result, 
+                       run_func=lambda case, result: poll.submit(case, result), 
+                       interval=interval)
+
+    def run_with_timeout(self, test, result, timeout):
+        print(test, result, timeout)
+        set_timeout(timeout, result.addTimeout)(test)(result)
+
+    def run(self, suite, callback=None):
+        result = Result()
+        result.start_at = datetime.now()
+        self.run_suite(suite, result)
+        result.end_at = datetime.now()
+        if callback:
+            callback(result)
+        return result
+
+class HTMLRunner(Runner):
+    def __init__(self, output, title="Test Report", description="", tester="",template='simple', **kwargs):
+        self.file = datetime.now().strftime(output)
+        self.title = title
+        self.description = description
+        self.tester = tester
+        self.template = template
+        self.kwargs = kwargs
+        self.timeout = 10
+
+    def generate_report(self, result):
+        basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_path = os.path.join(basedir, 'templates', '%s.html' % self.template)
+
+        with open(template_path) as f:
+            template_content = f.read()
+        
+        test_classess = result.sortByClass()
+        
+        report_config_info = { 
+            "title": self.title,
+            "description": self.description,
+            "tester": self.tester
+            }
+        result_stats_info = {
+            "total": len(result.result),
+            "run_num": result.testsRun,
+            "pass_num": len(result.success),
+            "fail_num": len(result.failures),
+            "skipped_num": len(result.skipped),
+            "error_num": len(result.errors),
+            "xfail_num": len(result.expectedFailures),
+            "xpass_num": len(result.unexpectedSuccesses),
+            "rerun_num": 0,
+            "start_at": result.start_at,
+            "end_at": result.end_at,
+            "duration": result.end_at - result.start_at,
+        }
+        env_info = {
+            "platform": platform.platform(),
+            "system": platform.system(),
+            "python_version": platform.python_version(),
+            "env": dict(os.environ),
+        }
+        context = {
+            "result": result,
+            "test_cases": result.result,
+            "test_classes": test_classess,
+        }
+        [context.update(info) for info in (report_config_info, 
+                                           result_stats_info, 
+                                           env_info, 
+                                           self.kwargs)]
+        
+        content = Template(template_content).render(context)
+        with open(self.file, "w") as f:
+            f.write(content)
+
+    def run(self, suite):
+        result = super().run(suite, callback=self.generate_report)
+        return result
+
+
+if __name__ == "__main__":
+
+    pass

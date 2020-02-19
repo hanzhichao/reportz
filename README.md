@@ -1,20 +1,22 @@
 # reportz
 
-httprunner for unittest
+HTMLRunner for unittest
+
+![](report.png)
 
 ## Feature
 - 日志
 - 添加图片
-- 顺序执行/打乱执行
-- 多线程
+- [x] 顺序执行/打乱执行
+- [x] 多线程
 - 失败重试
 - [x] 按日期命名
 - 多语言
-- 发送邮件
+- ~~发送邮件~~
 - [x] 按测试类统计
 - 统计图
 - [x] 执行时间
-- 超时时间设置
+- [x] 超时时间设置
 - [x] 环境信息
 - 多次运行结果
 - 性能分析
@@ -27,38 +29,27 @@ httprunner for unittest
 - email支持格式
 - ~~发送到飞书、钉钉、企业微信，短信（仅summary),Confluence~~  (hook)
 - [x] 获取代码数据
-- tag实现
-- level实现
-- timeout实现
+- [x] tag实现
+- [x] level实现
+- [x] timeout实现
 
 
-```python
-test_runner = TestRunner(
-        report_file_name='index',
-        output_path='report',
-        title='一个简单的测试报告',
-        description='随意描述',
-        thread_count=10,
-        thread_start_wait=0,
-        tries=5,
-        delay=1,
-        back_off=2,
-        retry=False,
-        sequential_execution=True,
-        lang='cn'
-    )
-```
 ## Install
 ```
 pip install reportz
 ```
 
 ## Simple Use
+```python
+from reportz import HTMLRunner
+suite = unittest.defaultTestLoader.discover('.')
+HTMLRunner(output="report_%Y%m%d_%H%M%S.html",
+            title="测试报告",
+            description="测试报告描述", tester='Hzc').run(suite)
 
-
-## File type data type mapping
+```
 
 
 ## Todo
 - [ ] setup module timeout问题
-- [ ] not run test duration问题
+- [x] not run test duration问题

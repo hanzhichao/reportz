@@ -1,30 +1,59 @@
 import os
 import sys
-sys.path.append('/Users/apple/Documents/Projects/Self/Pythonz/runnerz')
+sys.path.append('/Users/apple/Documents/Projects/Self/Pythonz/reportz')
 import unittest
-from runnerz import Runner, HTMLRunner, collect
-import logging
+from reportz import Runner, group_suites_by_class, flatten_suite, HTMLRunner
+from reportz import Result
 
 basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 testpath = os.path.join(basedir, 'tests', 'data')
 suite = unittest.defaultTestLoader.discover(testpath)
+result = Result()
+runner = Runner()
 
+# test_error (demo2.demo22.test_demo22.TestDemo22) <class 'demo2.demo22.test_demo22.TestDemo22'> (<class 'FileNotFoundError'>, FileNotFoundError(2, 'No such file or directory'), <traceback object at 0x110029208>) <class 'tuple'>
+# setUpModule (demo2.test_demo2) <class 'unittest.suite._ErrorHolder'> (<class 'NameError'>, NameError("name 'sleep' is not defined",), <traceback object at 0x110002088>) <class 'tuple'>
+# tearDownModule (demo2.test_demo2) <class 'unittest.suite._ErrorHolder'> (<class 'NameError'>, NameError("name 'sleep' is not defined",), <traceback object at 0x100eed088>) <class 'tuple'>
+# setUpClass (demo2.test_demo2.TestDemo2) <class 'unittest.suite._ErrorHolder'> (<class 'NameError'>, NameError("name 'sleep' is not defined",), <traceback object at 0x10d0eb908>) <class 'tuple'>
 
-def test_collect():
+def test_result_setup_module_error():
     suite = unittest.defaultTestLoader.discover(testpath)
-    new_suite = collect(suite)
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
-    assert result.testsRun == 16
-    # from pprint import pprint
-    # pprint(result.__dict__)
+    runner.run_suite(suite, result)
+    print(result)
 
+
+def test_flatten_suite():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    suite = flatten_suite(suite)
+    print(suite.countTestCases())
+    assert suite.countTestCases() == 16
+
+def test_collect_only():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    runner.collect_only(suite)
 
 def test_run_suite():
-    runner = Runner()
     suite = unittest.defaultTestLoader.discover(testpath)
-    runner.run_
-    
+    result = unittest.result.TestResult()
+    runner.run_suite(suite, result)
+    print(result)
 
+def test_run_suite_in_thread_poll():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    result = unittest.result.TestResult()
+    runner.run_suite_in_thread_poll(suite, result)
+    print(result)
+
+def test_group_suites_by_class():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    suite_list = group_suites_by_class(suite)
+    assert 3 == len(suite_list)
+
+
+def test_timeout():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    runner.run_with_timeout(suite, result, 3)
+    
 def test_with_default_template():
     suite = unittest.defaultTestLoader.discover(testpath)
     HTMLRunner(output="report.html",
@@ -45,43 +74,5 @@ def test_with_pytest_html_template():
                description="测试报告描述", tester='Hzc',template='pytest_html').run(suite)
 
 
-
 if __name__ == "__main__":
-    test_collect()
-    # suite = unittest.defaultTestLoader.discover(testpath)
-    # runner = unittest.TextTestRunner(verbosity=2).run(suite)
-    # test_with_default_template()
-    # test_with_htmltestreportcn_template()
-    # test_with_pytest_html_template()
-
-    # from HTMLTestReportCN import HTMLTestRunner
-    
-    # # from HTMLTestRunner_PY3 import HTMLTestRunner
-    # with open('report_htmlreport.html', 'wb') as f:  # 从配置文件中读取
-    #     HTMLTestRunner(stream=f, title="Api Test", description="测试描述").run(suite)
-
-    # from HTMLReport import TestRunner
-    # test_runner = TestRunner(
-    #     report_file_name='report_htmlreport',
-    #     output_path='.',
-    #     title='一个简单的测试报告',
-    #     description='随意描述',
-    #     thread_count=10,
-    #     thread_start_wait=0,
-    #     tries=5,
-    #     delay=1,
-    #     back_off=2,
-    #     retry=False,
-    #     sequential_execution=True,
-    #     lang='cn'
-    # )
-    # test_runner.run(suite)
-
-    # from pyunitreport import HTMLTestRunner
-    # # with open('report_pyunitreport.html', 'wb') as f:  # 从配置文件中读取
-    # HTMLTestRunner(output='refer',report_name='pyunitreport.html', report_title="Api Test").run(suite)
-
-    # from HtmlTestRunner import HTMLTestRunner
-    # HTMLTestRunner(output='reports').run(suite)
-
-    # from HTMLTestRunner_PY3
+    test_with_default_template()
