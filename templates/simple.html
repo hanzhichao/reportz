@@ -10,7 +10,7 @@
     <h1 class="pt-4">{{title}}</h1>
     {% if description %}<h6>{{description}}</h6>{% endif %}
     {% if tester %}<h6>执行人: {{tester}}</h6>{% endif %}
-    <h6>概要: 执行总数: {{run_num}} 通过: {{pass_num}} 失败: {{fail_num}} 出错: {{error_num}} 跳过: {{skipped_num}}</h6>
+    <h6>概要: 总数: {{total}} 执行数: {{run_num}} 通过: {{pass_num}} 失败: {{fail_num}} 出错: {{error_num}} 跳过: {{skipped_num}}</h6>
     <h6 class="pb-2">开始时间: {{start_at}} 结束时间: {{end_at}} 耗时: {{duration}}s</h6>
     <table class="table table-sm table-striped table-bordered table-hover">
         <thead><tr><th>序号</th><th>用例</th><th>总数</th><th>通过</th><th>失败</th><th>出错</th><th>耗时</th></tr></thead>
@@ -23,11 +23,14 @@
                     {% elif test.status in ['FAIL', 'XPASS'] %}table-danger
                     {% elif test.status=='ERROR' %}table-warning
                     {% else %}table-secondary
-                    {% endif %}"><td>{{test.sn}}</td><td>{{test.name}}</td>
+                    {% endif %}"><td>{{test.sn}}</td><td>{{test.full_name}}</td>
                     <td colspan="4">{{test.status}}
                         {% if test.output %}<br/>{{test.output}}{% endif %}
-                        {% if test.exec_info %}<br/>{{test.exec_info}}</td>{% endif %}<td>{{test.duration}}</td>
+                        {% if test.exec_info %}<br/>{{test.exec_info}}</td>{% endif %}
+                    </td><td>{{test.duration}}</td>
                     </tr>
+                    <tr hidden><td colspan="7"><pre>{% if test.output %}<br/>{{test.output}}{% endif %}
+                        {% if test.exec_info %}<br/>{{test.exec_info}}</td>{% endif %}</pre></td></tr>
                 {% endfor %}
             {% endfor %}
         </tbody>

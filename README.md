@@ -25,7 +25,12 @@ httprunner for unittest
 - [x] extra信息
 - [x] 自定义模板
 - email支持格式
-- 发送到飞书、钉钉、企业微信，短信（仅summary),Confluence(hook)
+- ~~发送到飞书、钉钉、企业微信，短信（仅summary),Confluence~~  (hook)
+- [x] 获取代码数据
+- tag实现
+- level实现
+- timeout实现
+
 
 ```python
 test_runner = TestRunner(
@@ -55,3 +60,5 @@ pip install reportz
 
 
 ## Todo
+- [ ] setup module timeout问题
+- [ ] not run test duration问题

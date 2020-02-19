@@ -1,10 +1,15 @@
 import unittest
 import logging
+import ddt
 
+data = [1, 2, 3, 4]
 
+@ddt.ddt
 class TestDemo1(unittest.TestCase):
-    def test_success(self):
-        print('success')
+
+    @ddt.data(*data)
+    def test_success(self, value):
+        print('success with %s' %value)
 
     def test_fail(self):
         logging.info('fail')

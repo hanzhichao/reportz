@@ -1,14 +1,29 @@
 import os
 import sys
-sys.path.append('/Users/apple/Documents/Projects/Self/Pythonz/reportz')
+sys.path.append('/Users/apple/Documents/Projects/Self/Pythonz/runnerz')
 import unittest
-from reportz import HTMLRunner
+from runnerz import Runner, HTMLRunner, collect
 import logging
 
 basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 testpath = os.path.join(basedir, 'tests', 'data')
 suite = unittest.defaultTestLoader.discover(testpath)
 
+
+def test_collect():
+    suite = unittest.defaultTestLoader.discover(testpath)
+    new_suite = collect(suite)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    assert result.testsRun == 16
+    # from pprint import pprint
+    # pprint(result.__dict__)
+
+
+def test_run_suite():
+    runner = Runner()
+    suite = unittest.defaultTestLoader.discover(testpath)
+    runner.run_
+    
 
 def test_with_default_template():
     suite = unittest.defaultTestLoader.discover(testpath)
@@ -30,8 +45,12 @@ def test_with_pytest_html_template():
                description="测试报告描述", tester='Hzc',template='pytest_html').run(suite)
 
 
+
 if __name__ == "__main__":
-    test_with_default_template()
+    test_collect()
+    # suite = unittest.defaultTestLoader.discover(testpath)
+    # runner = unittest.TextTestRunner(verbosity=2).run(suite)
+    # test_with_default_template()
     # test_with_htmltestreportcn_template()
     # test_with_pytest_html_template()
 
