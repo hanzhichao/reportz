@@ -31,10 +31,10 @@ setup(
     keywords=[
         'htmlrunner', 'testrunner', 'htmltestrunner',
     ],
-    name='emailz',
-    packages=find_packages(include=['reportz']),
+    name='htmlrunner',
+    packages=find_packages(include=['htmlrunner']),
     setup_requires=setup_requirements,
-    url='https://github.com/hanzhichao/reportz',
+    url='https://github.com/hanzhichao/htmlrunner',
     version='0.10',
     zip_safe=True,
     install_requires=['jinja2', 'logz']
